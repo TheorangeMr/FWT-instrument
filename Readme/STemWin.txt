@@ -1,0 +1,22 @@
+/*       
+	*文件名：    STemWin移植开发文档
+	*修改时间：  2021.03.03
+	*作者：      王峰
+*/
+
+1、分段存储设备的使用：
+	实质：就是调用GUI_MEMDEV_Draw()函数。
+	int   GUI_MEMDEV_Draw (GUI_RECT * pRect, GUI_CALLBACK_VOID_P * pfDraw, void * pData,
+                       	   int NumLines, int Flags);
+	函数参数说明：
+	（1）* pRect：所要绘制的区域（一般为矩形包围）的GUI_RECT类型结构体指针 。
+	（2）* pfDraw：执行绘制的回调函数的指针。
+	（3）* pData：用作回调函数参数的数据结构指针（自定义）。
+	（4）NumLines：推荐使用0（每段的行数由该函数自动计算）。
+	（5）Flags：推荐使用GUI_MEMDEV_HASTRANS(即0，GUI.h973行)。
+	（2021.03.03）
+	
+2、当芯片RAM不够时可用分段存储设备代替内存设备使用。
+	（2021.03.03）
+
+	

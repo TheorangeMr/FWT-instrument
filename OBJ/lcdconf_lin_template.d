@@ -1,0 +1,10 @@
+..\obj\lcdconf_lin_template.o: ..\STemWin\Config\LCDConf_Lin_Template.c
+..\obj\lcdconf_lin_template.o: ..\STemWin\inc\GUI.h
+..\obj\lcdconf_lin_template.o: D:\Keil5MDK\ARM\ARMCC\Bin\..\include\stddef.h
+..\obj\lcdconf_lin_template.o: ..\STemWin\inc\GUI_ConfDefaults.h
+..\obj\lcdconf_lin_template.o: ..\STemWin\Config\GUIConf.h
+..\obj\lcdconf_lin_template.o: ..\STemWin\inc\GUI_Type.h
+..\obj\lcdconf_lin_template.o: ..\STemWin\inc\LCD.h
+..\obj\lcdconf_lin_template.o: ..\STemWin\inc\Global.h
+..\obj\lcdconf_lin_template.o: ..\STemWin\inc\GUI_Version.h
+..\obj\lcdconf_lin_template.o: ..\STemWin\inc\GUIDRV_Lin.h

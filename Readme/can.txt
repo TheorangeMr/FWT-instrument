@@ -1,0 +1,140 @@
+/*******************************************
+	*文件名  ：  CAN通信学习说明文档
+	*作   者 ：  WF
+	*修改时间：  2021.03.26
+	*版   本：   v1.0
+*******************************************/
+
+1、CAN主控制寄存器 (CAN_MCR)相关说明：
+
+位7 TTCM: 时间触发通信模式 (Time triggered communication mode)
+	0：禁止时间触发通信模式；
+	1：允许时间触发通信模式。
+	
+位6	ABOM: 自动离线(Bus-Off)管理 (Automatic bus-off management)
+	该位决定CAN硬件在什么条件下可以退出离线状态。
+	0：离线状态的退出过程是，软件对CAN_MCR寄存器的INRQ位进行置’1’随后清’0’后，一旦硬
+	件检测到128次11位连续的隐性位，则退出离线状态；
+	1：一旦硬件检测到128次11位连续的隐性位，则自动退出离线状态。
+	
+位5	AWUM: 自动唤醒模式 (Automatic wakeup mode)
+	该位决定CAN处在睡眠模式时由硬件还是软件唤醒
+	0：睡眠模式通过清除CAN_MCR寄存器的SLEEP位，由软件唤醒；
+	1：睡眠模式通过检测CAN报文，由硬件自动唤醒。唤醒的同时，硬件自动对CAN_MSR寄存
+	器的SLEEP和SLAK位清’0’ 。
+	
+位4	NART: 禁止报文自动重传 (No automatic retransmission)
+	0：按照CAN标准， CAN硬件在发送报文失败时会一直自动重传直到发送成功；
+	1： CAN报文只被发送1次，不管发送的结果如何(成功、出错或仲裁丢失)。
+	
+位3	RFLM: 接收FIFO锁定模式 (Receive FIFO locked mode)
+	0：在接收溢出时FIFO未被锁定，当接收FIFO的报文未被读出，下一个收到的报文会覆盖原有
+	的报文；
+	1：在接收溢出时FIFO被锁定，当接收FIFO的报文未被读出，下一个收到的报文会被丢弃。
+	
+位2	TXFP: 发送FIFO优先级 (Transmit FIFO priority)
+	当有多个报文同时在等待发送时，该位决定这些报文的发送顺序
+	0：优先级由报文的标识符来决定；
+	1：优先级由发送请求的顺序来决定。
+	
+	
+2、CAN通信波特率计算
+					 1
+	波特率 = --------------------
+	            正常的位时间
+				
+	正常的位时间 = 1*tp + tBS1 + tBS2
+	          tp = (BPR[9:0] + 1)*tpclk
+			  tBS1 = (TS1[3:0] + 1)*tp
+			  tBS2 = (TS2[2:0] + 1)*tp
+			  
+   以如下配置为例，计算波特率
+   CAN_InitStructure.CAN_SJW=CAN_SJW_1tq;
+   CAN_InitStructure.CAN_BS1=CAN_BS1_2tq;
+   CAN_InitStructure.CAN_BS2=CAN_BS2_3tq;
+   CAN_InitStructure.CAN_Prescaler=48;
+   
+   APB1 = 36MHZ
+   
+   Baudrate = 36MHZ / (1+2+3) / 48 = 125KHZ
+   
+3、筛选器模式
+	屏蔽位模式：
+    在屏蔽位模式下，标识符寄存器和屏蔽寄存器一起，指定报文标识符的任何一位，应该按照
+	“必须匹配”或“不用关心”处理。
+   
+    标识符列表模式：
+	在标识符列表模式下，屏蔽寄存器也被当作标识符寄存器用。因此，不是采用一个标识符加一
+	个屏蔽位的方式，而是使用2个标识符寄存器。接收报文标识符的每一位都必须跟过滤器标识符
+	相同
+	
+	对于标识符列表模式下的过滤器(非屏蔽方式的过滤器)，软件不需要直接跟标识符进行比较。
+	对于屏蔽位模式下的过滤器，软件只须对需要的那些屏蔽位(必须匹配的位)进行比较即可。
+	
+	CAN 过滤器组i的寄存器x
+	标识符模式
+	寄存器的每位对应于所期望的标识符的相应位的电平。
+	0: 期望相应位为显性位；
+	1: 期望相应位为隐性位。
+	屏蔽位模式
+	寄存器的每位指示是否对应的标识符寄存器位一定要与期望的标识符的相应位一致。
+	0: 不关心，该位不用于比较；
+	1: 必须匹配，到来的标识符位必须与滤波器对应的标识符寄存器位相一致。
+	
+	总结：标识符列表模式下，筛选器必须每一位匹配；而在屏蔽位模式，根据过滤器组i的寄存器x设置的进行匹配。
+	
+4、CanTxMsg和CanRxMsg结构体成员变量说明
+
+	typedef struct
+	{
+	  uint32_t StdId;  /*!< Specifies the standard identifier.
+		标识符（ID）	This parameter can be a value between 0 to 0x7FF. */
+
+	  uint32_t ExtId;  /*!< Specifies the extended identifier.
+		扩展ID			This parameter can be a value between 0 to 0x1FFFFFFF. */
+
+	  uint8_t IDE;     /*!< Specifies the type of identifier for the message that 
+		标识符格式		will be transmitted. This parameter can be a value 
+							of @ref CAN_identifier_type */ 标准格式和扩展格式
+
+	  uint8_t RTR;     /*!< Specifies the type of frame for the message that will 
+		远程传输请求		be transmitted. This parameter can be a value of 
+							@ref CAN_remote_transmission_request */数据帧和遥控帧
+
+	  uint8_t DLC;     /*!< Specifies the length of the frame that will be 
+		数据长度		transmitted. This parameter can be a value between 
+							0 to 8 */单位：字节
+
+	  uint8_t Data[8]; /*!< Contains the data to be transmitted. It ranges from 0 
+		数据数组		to 0xFF. */
+	} CanTxMsg;
+	
+	typedef struct
+	{
+	  uint32_t StdId;  /*!< Specifies the standard identifier.
+							This parameter can be a value between 0 to 0x7FF. */
+
+	  uint32_t ExtId;  /*!< Specifies the extended identifier.
+							This parameter can be a value between 0 to 0x1FFFFFFF. */
+
+	  uint8_t IDE;     /*!< Specifies the type of identifier for the message that 
+							will be transmitted. This parameter can be a value 
+							of @ref CAN_identifier_type */
+
+	  uint8_t RTR;     /*!< Specifies the type of frame for the message that will 
+							be transmitted. This parameter can be a value of 
+							@ref CAN_remote_transmission_request */
+
+	  uint8_t DLC;     /*!< Specifies the length of the frame that will be 
+							transmitted. This parameter can be a value between 
+							0 to 8 */
+
+	  uint8_t Data[8]; /*!< Contains the data to be transmitted. It ranges from 0 
+							to 0xFF. */
+	} CanTxMsg;
+	
+5、uint8_t CAN_ReciveMsg(u8 *zdata, u8 len)函数说明
+	本函数是在CAN轮询模式下使用，由于一般CAN通信接收使用中断接收，所以一般不使用。
+	
+6、RxMessage.StdId的数据来源是接收FIFO邮箱标识符寄存器，根据过滤器优先级规则，过滤器匹配序号和报文一起，被存入邮箱中。
+	因此每个收到的报文，都有与它相关联的过滤器匹配序号。也就是说RxMessage.StdId就是经过筛选器后的标识符。
